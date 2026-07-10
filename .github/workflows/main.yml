@@ -42,7 +42,7 @@ jobs:
           LINKEDIN_URN_ID: ${{ secrets.LINKEDIN_URN_ID }}
           SENHA_APP_GMAIL: ${{ secrets.SENHA_APP_GMAIL }}
         # ATENÇÃO: Substitua 'curador_semanal.py' pelo nome exato que você deu ao seu arquivo Python
-        run: python curador_semanal.py 
+        run: python curador-resumos-semanais.py
 
       # 5. Salva o histórico de links no repositório (para evitar repetição de notícias)
       - name: Salvar histórico de notícias (Commit & Push)
