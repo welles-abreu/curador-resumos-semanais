@@ -5,7 +5,7 @@ on:
   workflow_dispatch: 
   
   # Agenda de execução (Cron Job)
-  # 11:19 UTC equivale a 08:00 no Horário de Brasília
+  # 11:19 UTC equivale a 08:19 no Horário de Brasília
   schedule:
     - cron: '19 11 * * *'
 
@@ -41,20 +41,21 @@ jobs:
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_URN_ID: ${{ secrets.LINKEDIN_URN_ID }}
           SENHA_APP_GMAIL: ${{ secrets.SENHA_APP_GMAIL }}
-        # ATENÇÃO: Substitua 'curador_semanal.py' pelo nome exato que você deu ao seu arquivo Python
         run: python curador-resumos-semanais.py
 
-      # 5. Salva o histórico de links no repositório (para evitar repetição de notícias)
-      - name: Salvar histórico de notícias (Commit & Push)
+      # 5. Salva os históricos no repositório (para evitar repetição de notícias e imagens)
+      - name: Salvar histórico de curadoria (Commit & Push)
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions@github.com'
           
-          # Garante que o arquivo exista mesmo nos dias conceituais sem notícia
+          # Garante que os arquivos existam mesmo nos dias conceituais
           touch historico_noticias.txt
+          touch historico_imagens_semanal.txt
           
-          # Adiciona o arquivo ao Git
+          # Adiciona os arquivos ao Git
           git add historico_noticias.txt
+          git add historico_imagens_semanal.txt
           
           # Faz o commit apenas se houver alterações. Ignora eventuais erros.
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Atualizando histórico de publicações [Actions Bot]" && git push) || true
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Atualizando históricos de curadoria [Actions Bot]" && git push) || true
