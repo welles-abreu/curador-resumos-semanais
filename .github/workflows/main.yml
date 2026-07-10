@@ -1,0 +1,60 @@
+name: Automação Curadoria Semanal (Timeline, TBT e Infográfico)
+
+on:
+  # Permite rodar o script manualmente clicando em um botão no GitHub
+  workflow_dispatch: 
+  
+  # Agenda de execução (Cron Job)
+  # 11:19 UTC equivale a 08:00 no Horário de Brasília
+  schedule:
+    - cron: '19 11 * * *'
+
+# Concede permissão para o bot do GitHub alterar arquivos (necessário para salvar a memória)
+permissions:
+  contents: write
+
+jobs:
+  executar_curadoria:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Puxa os arquivos do seu repositório para a máquina virtual
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v4
+
+      # 2. Prepara o ambiente com o Python
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. Instala exatamente as bibliotecas exigidas pelo código
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install feedparser requests google-genai
+
+      # 4. Executa o código Python puxando as chaves secretas do GitHub Secrets
+      - name: Executar script de curadoria
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_URN_ID: ${{ secrets.LINKEDIN_URN_ID }}
+          SENHA_APP_GMAIL: ${{ secrets.SENHA_APP_GMAIL }}
+        # ATENÇÃO: Substitua 'curador_semanal.py' pelo nome exato que você deu ao seu arquivo Python
+        run: python curador_semanal.py 
+
+      # 5. Salva o histórico de links no repositório (para evitar repetição de notícias)
+      - name: Salvar histórico de notícias (Commit & Push)
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          
+          # Garante que o arquivo exista mesmo nos dias conceituais sem notícia
+          touch historico_noticias.txt
+          
+          # Adiciona o arquivo ao Git
+          git add historico_noticias.txt
+          
+          # Faz o commit apenas se houver alterações. Ignora eventuais erros.
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Atualizando histórico de publicações [Actions Bot]" && git push) || true
