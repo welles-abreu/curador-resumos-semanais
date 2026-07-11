@@ -215,11 +215,11 @@ def publicar_e_notificar(conteudo):
     
     texto_final = f"📅 Resumo Semanal ({data_formatada})\n"
     texto_final += f"📌 {titulo_negrito}\n\n"
-    texto_final += f"{conteudo['corpo']}\n\n"
+    texto_final += f"{conteudo['corpo']}\n"
     texto_final += f"Obs.: Este conteúdo foi elaborado com suporte de IA a partir das notícias de maior impacto da semana.\n" 
         
     if conteudo['link_referencia']:
-        texto_final += f"🔗 Fonte Original Base: {conteudo['link_referencia']}\n\n"
+        texto_final += f"🔗 Fonte Original Base: {conteudo['link_referencia']}\n"
         
     texto_final += f"---\n🎯 Sugestão Prática de Leitura:\n"
     texto_final += f"{produto_negrito}\n"
