@@ -105,7 +105,7 @@ def criar_conteudo_do_dia():
     
     # 🔴 TRAVA DE SEGURANÇA: Se não for dia de postar, encerra o script silenciosamente.
     if dia_semana not in AGENDA:
-        print(f"Hoje é dia {dia_semana} (Seg=0, Ter=1, Qua=2, Sex=4). Não há postagem programada para hoje.")
+        print(f"Hoje é dia {dia_semana}. Não há postagem programada para hoje.")
         return None
 
     config_dia = AGENDA[dia_semana]
@@ -169,14 +169,12 @@ def criar_conteudo_do_dia():
         )
         dados_ia = json.loads(response.text)
         
-        # Salva o link no histórico para não repetir semana que vem
         link_origem = ""
         id_escolhido = int(dados_ia.get('id_noticia_selecionada', 0))
         if id_escolhido < len(noticias_validas):
             link_origem = noticias_validas[id_escolhido]['link']
             salvar_historico(link_origem, ARQUIVO_HISTORICO_NOTICIAS)
 
-        # Monta o link da Amazon
         busca_bruta = dados_ia['termo_busca_amazon']
         busca_limpa = busca_bruta.replace(" de ", " ").replace(" por ", " ").replace(" - ", " ")
         termo_busca_produto = urllib.parse.quote_plus(busca_limpa)
@@ -184,12 +182,11 @@ def criar_conteudo_do_dia():
         timestamp_atual = int(time.time())
         link_afiliado = f"https://www.amazon.com.br/s?k={termo_busca_produto}&tag={TAG_AFILIADO}&ref_=lnkd_{timestamp_atual}"
         
-        # 🟢 Sorteio de Imagem Temática Inédita (TBT, Timeline ou Infográfico)
         historico_imagens = ler_historico(ARQUIVO_HISTORICO_IMAGENS)
         imagens_disponiveis = [img for img in config_dia["imagens"] if img not in historico_imagens]
         
         if not imagens_disponiveis:
-            imagens_disponiveis = config_dia["imagens"] # Fallback se gastar todas
+            imagens_disponiveis = config_dia["imagens"] 
             
         imagem_final = random.choice(imagens_disponiveis)
         salvar_historico(imagem_final, ARQUIVO_HISTORICO_IMAGENS)
@@ -230,19 +227,22 @@ def publicar_e_notificar(conteudo):
     texto_final += f"🛒 Veja os detalhes na Amazon: {conteudo['link_produto']}\n\n"
     texto_final += f"{conteudo['hashtags']}"
 
-    # Publicando como "IMAGE" no LinkedIn usando a imagem Temática do banco
+    # 🔴 SOLUÇÃO DO ERRO 400: Voltando para a estrutura "ARTICLE"
+    thumbnail_array = []
+    if conteudo.get('imagem_contextual'):
+        thumbnail_array = [{"resolvedUrl": conteudo['imagem_contextual']}]
+
+    content_entity = {"entityLocation": conteudo['link_produto']} 
+    if thumbnail_array:
+        content_entity["thumbnails"] = thumbnail_array
+
     body = {
         "owner": LINKEDIN_URN_ID,
         "text": {"text": texto_final},
         "content": {
-            "shareMediaCategory": "IMAGE",
-            "media": [
-                {
-                    "status": "READY",
-                    "originalUrl": conteudo['imagem_contextual'],
-                    "title": f"Dica do Curador: {conteudo['nome_produto']}"
-                }
-            ]
+            "contentEntities": [content_entity],
+            "title": f"Dica do Curador: {conteudo['nome_produto']}", 
+            "shareMediaCategory": "ARTICLE"
         },
         "distribution": {"linkedInDistributionTarget": {"visibleToGuest": True}}
     }
@@ -274,7 +274,7 @@ def publicar_e_notificar(conteudo):
     print(f"Processo finalizado. Status LinkedIn: {res.status_code}")
 
 if __name__ == "__main__":
-    print(f"Iniciando curadoria semanal. Dia: {datetime.now().weekday()}")
+    print(f"Iniciando curadoria semanal multi-imagens e anti-repetição. Dia: {datetime.now().weekday()}")
     conteudo = criar_conteudo_do_dia()
     
     if conteudo:
