@@ -5,10 +5,10 @@ on:
   workflow_dispatch: 
   
   # Agenda de execução (Cron Job)
-  # 11:19 UTC equivale a 08:19 no Horário de Brasília
+  # 7:19 UTC equivale a 04:19 no Horário de Brasília
   # 0 = Domingo, 4 = Quinta-feira, 6 = Sábado
   schedule:
-    - cron: '19 11 * * 0,4,6'
+    - cron: '19 7 * * 0,4,6'
 
 # Concede permissão para o bot do GitHub alterar arquivos (necessário para salvar a memória)
 permissions:
