@@ -241,7 +241,7 @@ def publicar_e_notificar(conteudo):
         "text": {"text": texto_final},
         "content": {
             "contentEntities": [content_entity],
-            "title": f"Dica do Curador: {conteudo['nome_produto']}", 
+            "title": f"Acesse: {conteudo['nome_produto']}", 
             "shareMediaCategory": "ARTICLE"
         },
         "distribution": {"linkedInDistributionTarget": {"visibleToGuest": True}}
