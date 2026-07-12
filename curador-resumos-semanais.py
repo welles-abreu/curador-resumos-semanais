@@ -6,7 +6,6 @@ import os
 import json
 import urllib.parse
 import random
-import time
 from google import genai
 from google.genai import types
 from email.message import EmailMessage
@@ -24,7 +23,6 @@ SENHA_APP_GMAIL = os.environ.get('SENHA_APP_GMAIL')
 EMAIL_REMETENTE = "wellesmatias@gmail.com"
 EMAIL_DESTINO = "wellesmatias@gmail.com"
 AGENT_NAME = "Curador_Fiscal"
-TAG_AFILIADO = "wellesmatias-20"
 
 ARQUIVO_HISTORICO_NOTICIAS = "historico_noticias.txt"
 ARQUIVO_HISTORICO_IMAGENS = "historico_imagens_semanal.txt"
@@ -37,15 +35,21 @@ param = "?auto=format&fit=crop&w=800&q=80&fm=jpg"
 
 AGENDA = {
     3: { # QUINTA-FEIRA: TBT (Foco visual: Relógios, Tempo, Arquivo)
-        "tema": "TBT: Resumo do Fato Orçamentário Mais Impactante da Semana", "tipo_produto": "Livro Amazon", "usa_noticia": True, "busca_rss": '"orçamento público" OR "política fiscal" Brasil', "periodo_rss": "7d",
+        "tema": "TBT: Resumo do Fato Orçamentário Mais Impactante da Semana", 
+        "tipo_produto": "uma imagem que sintetiza o conteúdo em debate", 
+        "usa_noticia": True, "busca_rss": '"orçamento público" OR "política fiscal" Brasil', "periodo_rss": "7d",
         "imagens": [f"{url_b}1501139083538-0139583c060f{param}", f"{url_b}1495364141860-b0d03dea4520{param}", f"{url_b}1506784901227-36bd224a6a0e{param}", f"{url_b}1435348773515-59c274d812ce{param}", f"{url_b}1584844697368-45b084931bc7{param}", f"{url_b}1517411032315-54ef2cb783bb{param}", f"{url_b}1509653087866-e1f51b0f16f5{param}", f"{url_b}1464013778559-00664e4ea754{param}", f"{url_b}1528659103823-356bcba14c40{param}", f"{url_b}1485601133034-722026526eb6{param}"]
     },
     5: { # SÁBADO: Boletim TIMELINE (Foco visual: Caminhos, Roadmaps, Escadas)
-        "tema": "Boletim Orçamentário Semanal em formato Timeline", "tipo_produto": "Livro Amazon", "usa_noticia": True, "busca_rss": '"orçamento público" OR "finanças públicas" Brasil', "periodo_rss": "7d", 
+        "tema": "Boletim Orçamentário Semanal em formato Timeline", 
+        "tipo_produto": "uma imagem de timeline", 
+        "usa_noticia": True, "busca_rss": '"orçamento público" OR "finanças públicas" Brasil', "periodo_rss": "7d", 
         "imagens": [f"{url_b}1507679799987-c73779587ccf{param}", f"{url_b}1488190211105-8b0e74bcb81f{param}", f"{url_b}1478479405421-ce83c92fb3ba{param}", f"{url_b}1454165804606-c3d57bc86b40{param}", f"{url_b}1434626881859-194d67366432{param}", f"{url_b}1493612278156-ee2861dc49b5{param}", f"{url_b}1512314889357-e157c22f938d{param}", f"{url_b}1417733403735-8c07e0e7a834{param}", f"{url_b}1497366216548-37526070297c{param}", f"{url_b}1501139083538-0139583c060f{param}"]
     },
     6: { # DOMINGO: Infográfico Orçamentário (Foco visual: Dashboards, Gráficos, Dados)
-        "tema": "Acontecimentos em Orçamento Público ilustrados como INFOGRÁFICO", "tipo_produto": "Livro Amazon", "usa_noticia": True, "busca_rss": '"orçamento público" OR "meta fiscal" Brasil', "periodo_rss": "7d",
+        "tema": "Acontecimentos em Orçamento Público ilustrados como INFOGRÁFICO", 
+        "tipo_produto": "um infográfico", 
+        "usa_noticia": True, "busca_rss": '"orçamento público" OR "meta fiscal" Brasil', "periodo_rss": "7d",
         "imagens": [f"{url_b}1460925895917-afdab827c52f{param}", f"{url_b}1551288049-bebda4e38f71{param}", f"{url_b}1611974789855-9c2a0a7236a3{param}", f"{url_b}1553729459-efe14ef6055d{param}", f"{url_b}1543286380529-d38e16bef4a8{param}", f"{url_b}1526304640581-d334cdbbf45e{param}", f"{url_b}1504868584819-f8dd75c52e0b{param}", f"{url_b}1434626881859-194d67366432{param}", f"{url_b}1556761175-4b46a572b786{param}", f"{url_b}1554224155-8d04cb21cd6c{param}"]
     }
 }
@@ -110,7 +114,6 @@ def criar_conteudo_do_dia():
 
     config_dia = AGENDA[dia_semana]
     texto_contexto_noticias = ""
-    noticia_principal_link = ""
     
     # Busca Notícias
     periodo = config_dia.get("periodo_rss", "7d")
@@ -140,7 +143,9 @@ def criar_conteudo_do_dia():
         prompt += f"FORMATO EXIGIDO (INFOGRÁFICO):\nUse as notícias abaixo:\n{texto_contexto_noticias}\nEscreva o texto estruturado COMO UM INFOGRÁFICO. Extraia os dados e apresente-os em tópicos curtos usando emojis de gráficos (📊, 📈) simulando um painel de dados.\n"
 
     prompt += (
-        f"\nSUGESTÃO DE PRODUTO OBRIGATÓRIA:\nIndique um {config_dia['tipo_produto']} real e comercializado na Amazon Brasil que aprofunde o tema discutido. Justifique a escolha em 1 ou 2 frases integradas ao final do texto."
+        f"\nPRODUTO SUGERIDO (IMAGEM OBRIGATÓRIA):\n"
+        f"Não sugira livros da Amazon ou links externos. O 'produto' fornecido hoje será {config_dia['tipo_produto']}. "
+        f"Conclua o seu texto convidando o leitor de forma amigável a analisar a imagem/infográfico que acompanha a publicação."
     )
 
     schema = {
@@ -148,13 +153,10 @@ def criar_conteudo_do_dia():
         "properties": {
             "id_noticia_selecionada": {"type": "INTEGER", "description": "ID da notícia principal escolhida."},
             "titulo_post": {"type": "STRING", "description": "Manchete atrativa"},
-            "corpo_post": {"type": "STRING", "description": "Texto do post formatado estritamente como exigido (Timeline, Infográfico, TBT, etc)"},
-            "termo_busca_amazon": {"type": "STRING", "description": "APENAS Título do Livro e Autor. NÃO use as palavras 'de' ou 'por' para não quebrar a busca da Amazon."},
-            "nome_produto_exibicao": {"type": "STRING"},
-            "explicacao_produto": {"type": "STRING"},
+            "corpo_post": {"type": "STRING", "description": "Texto do post formatado estritamente como exigido (Timeline, Infográfico, TBT, etc). Certifique-se de incluir a referência final à imagem."},
             "hashtags": {"type": "STRING"}
         },
-        "required": ["id_noticia_selecionada", "titulo_post", "corpo_post", "termo_busca_amazon", "nome_produto_exibicao", "explicacao_produto", "hashtags"]
+        "required": ["id_noticia_selecionada", "titulo_post", "corpo_post", "hashtags"]
     }
 
     try:
@@ -175,13 +177,6 @@ def criar_conteudo_do_dia():
             link_origem = noticias_validas[id_escolhido]['link']
             salvar_historico(link_origem, ARQUIVO_HISTORICO_NOTICIAS)
 
-        busca_bruta = dados_ia['termo_busca_amazon']
-        busca_limpa = busca_bruta.replace(" de ", " ").replace(" por ", " ").replace(" - ", " ")
-        termo_busca_produto = urllib.parse.quote_plus(busca_limpa)
-        
-        timestamp_atual = int(time.time())
-        link_afiliado = f"https://www.amazon.com.br/s?k={termo_busca_produto}&tag={TAG_AFILIADO}&ref_=lnkd_{timestamp_atual}"
-        
         historico_imagens = ler_historico(ARQUIVO_HISTORICO_IMAGENS)
         imagens_disponiveis = [img for img in config_dia["imagens"] if img not in historico_imagens]
         
@@ -194,12 +189,10 @@ def criar_conteudo_do_dia():
         return {
             "titulo": dados_ia['titulo_post'],
             "corpo": dados_ia['corpo_post'],
-            "nome_produto": dados_ia['nome_produto_exibicao'],
-            "explicacao_produto": dados_ia['explicacao_produto'],
-            "link_produto": link_afiliado,
             "hashtags": dados_ia['hashtags'],
             "link_referencia": link_origem,
-            "imagem_contextual": imagem_final
+            "imagem_contextual": imagem_final,
+            "tipo_produto": config_dia['tipo_produto']
         }
     except Exception as e:
         print(f"Erro na geração de conteúdo: {e}")
@@ -210,29 +203,27 @@ def criar_conteudo_do_dia():
 # ==========================================
 def publicar_e_notificar(conteudo):
     titulo_negrito = aplicar_negrito(conteudo['titulo'])
-    produto_negrito = aplicar_negrito(conteudo['nome_produto'])
     data_formatada = datetime.now().strftime('%d/%m/%Y')
     
     texto_final = f"📅 Resumo Semanal ({data_formatada})\n"
     texto_final += f"📌 {titulo_negrito}\n\n"
-    texto_final += f"{conteudo['corpo']}\n"
+    texto_final += f"{conteudo['corpo']}\n\n"
     texto_final += f"Obs.: Este conteúdo foi elaborado com suporte de IA a partir das notícias de maior impacto da semana.\n" 
         
     if conteudo['link_referencia']:
         texto_final += f"🔗 Fonte Original Base: {conteudo['link_referencia']}\n"
         
-    texto_final += f"---\n🎯 Sugestão Prática de Leitura:\n"
-    texto_final += f"{produto_negrito}\n"
-    texto_final += f"💡 {conteudo['explicacao_produto']}\n"
-    texto_final += f"🛒 Veja os detalhes na Amazon: {conteudo['link_produto']}\n\n"
-    texto_final += f"{conteudo['hashtags']}"
+    texto_final += f"\n{conteudo['hashtags']}"
 
-    # 🔴 SOLUÇÃO DO ERRO 400: Voltando para a estrutura "ARTICLE"
+    # Utilizando a imagem contextual escolhida como thumbnail. O destino do artigo (URL)
+    # se torna a notícia de origem para que o leitor acesse a fonte caso clique na imagem.
     thumbnail_array = []
     if conteudo.get('imagem_contextual'):
         thumbnail_array = [{"resolvedUrl": conteudo['imagem_contextual']}]
 
-    content_entity = {"entityLocation": conteudo['link_produto']} 
+    link_destino = conteudo['link_referencia'] if conteudo.get('link_referencia') else conteudo['imagem_contextual']
+
+    content_entity = {"entityLocation": link_destino} 
     if thumbnail_array:
         content_entity["thumbnails"] = thumbnail_array
 
@@ -241,7 +232,7 @@ def publicar_e_notificar(conteudo):
         "text": {"text": texto_final},
         "content": {
             "contentEntities": [content_entity],
-            "title": f"Acesse: {conteudo['nome_produto']}", 
+            "title": conteudo['titulo'], 
             "shareMediaCategory": "ARTICLE"
         },
         "distribution": {"linkedInDistributionTarget": {"visibleToGuest": True}}
