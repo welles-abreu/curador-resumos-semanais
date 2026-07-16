@@ -20,6 +20,9 @@ LINKEDIN_ACCESS_TOKEN = os.environ.get('LINKEDIN_ACCESS_TOKEN')
 LINKEDIN_URN_ID = os.environ.get('LINKEDIN_URN_ID') 
 SENHA_APP_GMAIL = os.environ.get('SENHA_APP_GMAIL')
 
+# Novo: Variável de ambiente para o seu link de produto principal na Amazon
+LINK_AFILIADO_AMAZON = os.environ.get('LINK_AFILIADO_AMAZON', 'https://amzn.to/SEULINK')
+
 EMAIL_REMETENTE = "wellesmatias@gmail.com"
 EMAIL_DESTINO = "wellesmatias@gmail.com"
 AGENT_NAME = "Curador_Fiscal"
@@ -34,23 +37,23 @@ url_b = "https://images.unsplash.com/photo-"
 param = "?auto=format&fit=crop&w=800&q=80&fm=jpg"
 
 AGENDA = {
-    3: { # QUINTA-FEIRA: TBT (Foco visual: Relógios, Tempo, Arquivo)
+    3: { # QUINTA-FEIRA: TBT
         "tema": "TBT: Resumo do Fato Orçamentário Mais Impactante da Semana", 
-        "tipo_produto": "uma imagem que sintetiza o conteúdo em debate", 
+        "tipo_produto": "livro técnico sobre Gestão Fiscal", 
         "usa_noticia": True, "busca_rss": '"orçamento público" OR "política fiscal" Brasil', "periodo_rss": "7d",
-        "imagens": [f"{url_b}1501139083538-0139583c060f{param}", f"{url_b}1495364141860-b0d03dea4520{param}", f"{url_b}1506784901227-36bd224a6a0e{param}", f"{url_b}1435348773515-59c274d812ce{param}", f"{url_b}1584844697368-45b084931bc7{param}", f"{url_b}1517411032315-54ef2cb783bb{param}", f"{url_b}1509653087866-e1f51b0f16f5{param}", f"{url_b}1464013778559-00664e4ea754{param}", f"{url_b}1528659103823-356bcba14c40{param}", f"{url_b}1485601133034-722026526eb6{param}"]
+        "imagens": [f"{url_b}1501139083538-0139583c060f{param}"] # Reduzido para brevidade
     },
-    5: { # SÁBADO: Boletim TIMELINE (Foco visual: Caminhos, Roadmaps, Escadas)
+    5: { # SÁBADO: Boletim TIMELINE
         "tema": "Boletim Orçamentário Semanal em formato Timeline", 
-        "tipo_produto": "uma imagem de timeline", 
+        "tipo_produto": "livro sobre Governança de Dados com Python", 
         "usa_noticia": True, "busca_rss": '"orçamento público" OR "finanças públicas" Brasil', "periodo_rss": "7d", 
-        "imagens": [f"{url_b}1507679799987-c73779587ccf{param}", f"{url_b}1488190211105-8b0e74bcb81f{param}", f"{url_b}1478479405421-ce83c92fb3ba{param}", f"{url_b}1454165804606-c3d57bc86b40{param}", f"{url_b}1434626881859-194d67366432{param}", f"{url_b}1493612278156-ee2861dc49b5{param}", f"{url_b}1512314889357-e157c22f938d{param}", f"{url_b}1417733403735-8c07e0e7a834{param}", f"{url_b}1497366216548-37526070297c{param}", f"{url_b}1501139083538-0139583c060f{param}"]
+        "imagens": [f"{url_b}1507679799987-c73779587ccf{param}"]
     },
-    6: { # DOMINGO: Infográfico Orçamentário (Foco visual: Dashboards, Gráficos, Dados)
+    6: { # DOMINGO: Infográfico Orçamentário
         "tema": "Acontecimentos em Orçamento Público ilustrados como INFOGRÁFICO", 
-        "tipo_produto": "um infográfico", 
+        "tipo_produto": "periférico de alta performance para analistas de dados", 
         "usa_noticia": True, "busca_rss": '"orçamento público" OR "meta fiscal" Brasil', "periodo_rss": "7d",
-        "imagens": [f"{url_b}1460925895917-afdab827c52f{param}", f"{url_b}1551288049-bebda4e38f71{param}", f"{url_b}1611974789855-9c2a0a7236a3{param}", f"{url_b}1553729459-efe14ef6055d{param}", f"{url_b}1543286380529-d38e16bef4a8{param}", f"{url_b}1526304640581-d334cdbbf45e{param}", f"{url_b}1504868584819-f8dd75c52e0b{param}", f"{url_b}1434626881859-194d67366432{param}", f"{url_b}1556761175-4b46a572b786{param}", f"{url_b}1554224155-8d04cb21cd6c{param}"]
+        "imagens": [f"{url_b}1460925895917-afdab827c52f{param}"]
     }
 }
 
@@ -107,7 +110,6 @@ def buscar_noticias(termo, periodo="7d", limite=25):
 def criar_conteudo_do_dia():
     dia_semana = datetime.now().weekday()
     
-    # 🔴 TRAVA DE SEGURANÇA: Se não for dia de postar, encerra o script silenciosamente.
     if dia_semana not in AGENDA:
         print(f"Hoje é dia {dia_semana}. Não há postagem programada para hoje.")
         return None
@@ -115,14 +117,13 @@ def criar_conteudo_do_dia():
     config_dia = AGENDA[dia_semana]
     texto_contexto_noticias = ""
     
-    # Busca Notícias
     periodo = config_dia.get("periodo_rss", "7d")
     noticias_brutas = buscar_noticias(config_dia["busca_rss"], periodo, limite=30)
     historico_noticias = ler_historico(ARQUIVO_HISTORICO_NOTICIAS)
     noticias_validas = [n for n in noticias_brutas if n['link'] not in historico_noticias]
     
     if not noticias_validas:
-        print("Nenhuma notícia nova encontrada para a curadoria semanal.")
+        print("Nenhuma notícia nova encontrada.")
         return None
     
     for i, n in enumerate(noticias_validas[:15]):
@@ -130,33 +131,38 @@ def criar_conteudo_do_dia():
             
     prompt = (
         f"Assuma a persona do {AGENT_NAME}, um experiente Analista de Planejamento e Orçamento (APO) "
-        "e instrutor de escolas de governo. Sua audiência é técnica e de alto nível no LinkedIn, sem posicionamento político contra ou a favor, clara e objetiva.\n\n"
+        "e instrutor de escolas de governo. Sua audiência é técnica e de alto nível no LinkedIn.\n\n"
         f"A TAREFA DE HOJE: Escrever uma publicação sobre '{config_dia['tema']}'.\n\n"
-        "⚠️ REGRA DE SEGURANÇA INSTITUCIONAL: É EXPRESSAMENTE PROIBIDO selecionar notícias, redigir textos ou sugerir produtos que contenham ataques, críticas políticas, tom depreciativo ou polêmicas contra o Governo Federal ou seus aliados. Mantenha o foco 100% na técnica da gestão e orçamento.\n\n"
+        "⚠️ REGRA DE SEGURANÇA INSTITUCIONAL: Isenção política total. Foco na técnica, eficiência e governança.\n\n"
+        "ESTRUTURA DE TEXTO EXIGIDA:\n"
+        "1. Gancho (máx. 3 linhas) para reter atenção antes do botão 'Ver mais'.\n"
+        "2. Corpo técnico (parágrafos curtos).\n"
     )
     
-    if dia_semana == 3: # Quinta - TBT
-        prompt += f"FORMATO EXIGIDO (TBT):\nAnalise as notícias abaixo:\n{texto_contexto_noticias}\nEscolha a ÚNICA notícia de maior impacto técnico dos últimos 7 dias. Escreva o post no formato '#TBT da Governança', relembrando este fato.\n"
-    elif dia_semana == 5: # Sábado - Timeline
-        prompt += f"FORMATO EXIGIDO (TIMELINE):\nUse as notícias abaixo:\n{texto_contexto_noticias}\nEscreva o texto estruturado VISUALMENTE COMO UMA TIMELINE. Use marcadores ordenados (ex: 🔸 Passo 1, 🔸 Passo 2) para apresentar a evolução dos acontecimentos orçamentários da semana.\n"
-    elif dia_semana == 6: # Domingo - Infográfico
-        prompt += f"FORMATO EXIGIDO (INFOGRÁFICO):\nUse as notícias abaixo:\n{texto_contexto_noticias}\nEscreva o texto estruturado COMO UM INFOGRÁFICO. Extraia os dados e apresente-os em tópicos curtos usando emojis de gráficos (📊, 📈) simulando um painel de dados.\n"
+    if dia_semana == 3:
+        prompt += f"FORMATO (TBT):\nAnalise:\n{texto_contexto_noticias}\nEscolha a de maior impacto técnico. Formato '#TBT da Governança'.\n"
+    elif dia_semana == 5:
+        prompt += f"FORMATO (TIMELINE):\nAnalise:\n{texto_contexto_noticias}\nEscreva como uma TIMELINE visual (ex: 🔸 Passo 1).\n"
+    elif dia_semana == 6:
+        prompt += f"FORMATO (INFOGRÁFICO):\nAnalise:\n{texto_contexto_noticias}\nEscreva estruturado COMO UM INFOGRÁFICO (tópicos com 📊, 📈).\n"
 
+    # Instrução explícita para monetização
     prompt += (
-        f"\nPRODUTO SUGERIDO (IMAGEM OBRIGATÓRIA):\n"
-        f"Não sugira livros da Amazon ou links externos. O 'produto' fornecido hoje será {config_dia['tipo_produto']}. "
-        f"Conclua o seu texto convidando o leitor de forma amigável a analisar a imagem/infográfico que acompanha a publicação."
+        f"\nMONETIZAÇÃO DISCRETA (Amazon):\n"
+        f"Gere um pequeno texto de recomendação focado em: {config_dia['tipo_produto']}. "
+        f"Finalize com '🛒 Confira aqui:' (O link será inserido pelo script)."
     )
 
     schema = {
         "type": "OBJECT",
         "properties": {
-            "id_noticia_selecionada": {"type": "INTEGER", "description": "ID da notícia principal escolhida."},
-            "titulo_post": {"type": "STRING", "description": "Manchete atrativa"},
-            "corpo_post": {"type": "STRING", "description": "Texto do post formatado estritamente como exigido (Timeline, Infográfico, TBT, etc). Certifique-se de incluir a referência final à imagem."},
+            "id_noticia_selecionada": {"type": "INTEGER"},
+            "titulo_post": {"type": "STRING"},
+            "corpo_post": {"type": "STRING"},
+            "texto_monetizacao": {"type": "STRING", "description": "Recomendação discreta do produto Amazon"},
             "hashtags": {"type": "STRING"}
         },
-        "required": ["id_noticia_selecionada", "titulo_post", "corpo_post", "hashtags"]
+        "required": ["id_noticia_selecionada", "titulo_post", "corpo_post", "texto_monetizacao", "hashtags"]
     }
 
     try:
@@ -176,23 +182,13 @@ def criar_conteudo_do_dia():
         if id_escolhido < len(noticias_validas):
             link_origem = noticias_validas[id_escolhido]['link']
             salvar_historico(link_origem, ARQUIVO_HISTORICO_NOTICIAS)
-
-        historico_imagens = ler_historico(ARQUIVO_HISTORICO_IMAGENS)
-        imagens_disponiveis = [img for img in config_dia["imagens"] if img not in historico_imagens]
-        
-        if not imagens_disponiveis:
-            imagens_disponiveis = config_dia["imagens"] 
-            
-        imagem_final = random.choice(imagens_disponiveis)
-        salvar_historico(imagem_final, ARQUIVO_HISTORICO_IMAGENS)
         
         return {
             "titulo": dados_ia['titulo_post'],
             "corpo": dados_ia['corpo_post'],
+            "monetizacao": dados_ia['texto_monetizacao'],
             "hashtags": dados_ia['hashtags'],
-            "link_referencia": link_origem,
-            "imagem_contextual": imagem_final,
-            "tipo_produto": config_dia['tipo_produto']
+            "link_referencia": link_origem
         }
     except Exception as e:
         print(f"Erro na geração de conteúdo: {e}")
@@ -208,24 +204,24 @@ def publicar_e_notificar(conteudo):
     texto_final = f"📅 Resumo Semanal ({data_formatada})\n"
     texto_final += f"📌 {titulo_negrito}\n\n"
     texto_final += f"{conteudo['corpo']}\n\n"
-    texto_final += f"Obs.: Este conteúdo foi elaborado com suporte de IA a partir das notícias de maior impacto da semana.\n" 
-        
+    
+    # Inserção da Fonte
     if conteudo['link_referencia']:
-        texto_final += f"🔗 Fonte Original Base: {conteudo['link_referencia']}\n"
-        
-    texto_final += f"\n{conteudo['hashtags']}"
+        texto_final += f"🔗 Fonte Original da Notícia Base: {conteudo['link_referencia']}\n\n"
+    
+    # Inserção da Recomendação Amazon (com link estático definido no ambiente)
+    texto_final += f"💡 Recomendação de Setup/Leitura:\n{conteudo['monetizacao']} {LINK_AFILIADO_AMAZON}\n\n"
+    
+    texto_final += f"Obs.: Conteúdo curado via IA para eficiência analítica.\n" 
+    texto_final += f"{conteudo['hashtags']}"
 
-    # Utilizando a imagem contextual escolhida como thumbnail. O destino do artigo (URL)
-    # se torna a notícia de origem para que o leitor acesse a fonte caso clique na imagem.
-    thumbnail_array = []
-    if conteudo.get('imagem_contextual'):
-        thumbnail_array = [{"resolvedUrl": conteudo['imagem_contextual']}]
-
-    link_destino = conteudo['link_referencia'] if conteudo.get('link_referencia') else conteudo['imagem_contextual']
-
-    content_entity = {"entityLocation": link_destino} 
-    if thumbnail_array:
-        content_entity["thumbnails"] = thumbnail_array
+    # -------------------------------------------------------------
+    # O SEGREDO PARA O CARD DA AMAZON:
+    # Definimos o entityLocation EXCLUSIVAMENTE para o link da Amazon.
+    # Não passamos "thumbnails". Isso obriga o LinkedIn a fazer o 
+    # scraping nativo do Open Graph da página do produto.
+    # -------------------------------------------------------------
+    content_entity = {"entityLocation": LINK_AFILIADO_AMAZON} 
 
     body = {
         "owner": LINKEDIN_URN_ID,
@@ -250,7 +246,7 @@ def publicar_e_notificar(conteudo):
     try:
         msg = EmailMessage()
         status = "Sucesso" if sucesso_linkedin else f"Erro API {res.status_code}"
-        msg['Subject'] = f'Relatório Automação Semanal: {conteudo["titulo"]} - {status}'
+        msg['Subject'] = f'Relatório Automação: {conteudo["titulo"]} - {status}'
         msg['From'] = EMAIL_REMETENTE
         msg['To'] = EMAIL_DESTINO
         msg.set_content(texto_final)
@@ -265,9 +261,7 @@ def publicar_e_notificar(conteudo):
     print(f"Processo finalizado. Status LinkedIn: {res.status_code}")
 
 if __name__ == "__main__":
-    print(f"Iniciando curadoria semanal multi-imagens e anti-repetição. Dia: {datetime.now().weekday()}")
     conteudo = criar_conteudo_do_dia()
-    
     if conteudo:
         publicar_e_notificar(conteudo)
     else:
