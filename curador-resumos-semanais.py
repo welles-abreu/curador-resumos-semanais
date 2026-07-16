@@ -205,9 +205,9 @@ def publicar_e_notificar(conteudo):
     titulo_negrito = aplicar_negrito(conteudo['titulo'])
     data_formatada = datetime.now().strftime('%d/%m/%Y')
     
-    texto_final = f"📅 Resumo Semanal ({data_formatada})\n"
-    texto_final += f"📌 {titulo_negrito}\n\n"
-    texto_final += f"{conteudo['corpo']}\n\n"
+    texto_final = f"📅 Resumo da Semana ({data_formatada}) sobre o tema:\n"
+    texto_final += f"📌 {titulo_negrito}\n"
+    texto_final += f"{conteudo['corpo']}\n"
     texto_final += f"Obs.: Este conteúdo foi elaborado a partir das notícias de maior impacto da semana com foco estritamente técnico.\n" 
         
     if conteudo['link_referencia']:
