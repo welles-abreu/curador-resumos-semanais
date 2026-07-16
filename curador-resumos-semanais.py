@@ -130,7 +130,7 @@ def criar_conteudo_do_dia():
             
     prompt = (
         f"Assuma a persona do {AGENT_NAME}, um experiente Analista de Planejamento e Orçamento (APO) "
-        "e instrutor de escolas de governo. Sua audiência é técnica e de alto nível no LinkedIn, sem posicionamento político contra ou a favor, clara e objetiva.\n\n"
+        "e instrutor de escolas de governo. Sua audiência é técnica e de alto nível no LinkedIn, sem posicionamento político e partidário contra ou a favor, clara e objetiva.\n\n"
         f"A TAREFA DE HOJE: Escrever uma publicação sobre '{config_dia['tema']}'.\n\n"
         "⚠️ REGRA DE SEGURANÇA INSTITUCIONAL: É EXPRESSAMENTE PROIBIDO selecionar notícias, redigir textos ou sugerir produtos que contenham ataques, críticas políticas, tom depreciativo ou polêmicas contra o Governo Federal ou seus aliados. Mantenha o foco 100% na técnica da gestão e orçamento.\n\n"
     )
@@ -208,7 +208,7 @@ def publicar_e_notificar(conteudo):
     texto_final = f"📅 Resumo Semanal ({data_formatada})\n"
     texto_final += f"📌 {titulo_negrito}\n\n"
     texto_final += f"{conteudo['corpo']}\n\n"
-    texto_final += f"Obs.: Este conteúdo foi elaborado com suporte de IA a partir das notícias de maior impacto da semana.\n" 
+    texto_final += f"Obs.: Este conteúdo foi elaborado a partir das notícias de maior impacto da semana com foco estritamente técnico.\n" 
         
     if conteudo['link_referencia']:
         texto_final += f"🔗 Fonte Original Base: {conteudo['link_referencia']}\n"
