@@ -22,7 +22,7 @@ SENHA_APP_GMAIL = os.environ.get('SENHA_APP_GMAIL')
 
 EMAIL_REMETENTE = "wellesmatias@gmail.com"
 EMAIL_DESTINO = "wellesmatias@gmail.com"
-AGENT_NAME = "Curador_Fiscal"
+AGENT_NAME = "Curador Orçamentário"
 
 ARQUIVO_HISTORICO_NOTICIAS = "historico_noticias.txt"
 ARQUIVO_HISTORICO_IMAGENS = "historico_imagens_semanal.txt"
